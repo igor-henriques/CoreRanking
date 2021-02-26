@@ -1,0 +1,8 @@
+{ 
+	"Active": "true",
+    "Channel": "9",
+	"CheckInterval": "500",
+	"KillLimit": "5",
+	"TimeLimit": "50",
+	"BanTime": "3600"
+}

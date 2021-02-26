@@ -1,0 +1,96 @@
+Database =>
+Informações de acesso à database em que o PW está rodando.
+
+
+EloConfiguration =>
+Está sendo implementado. Ignorável, por enquanto.
+
+
+Firewall =>
+• Channel: o canal em que o aviso de ban irá ser enviado (conferir abaixo a relação de canais*)
+• CheckInterval: de quanto em quanto tempo (em milissegundos) o firewall irá rodar à procura de free kill.
+• TimeLimit: o tempo determinado para analisar.
+• KillLimit: a quantidade de kill suportável dentro do tempo definido em TimeLimit.
+Por exemplo: em 50 segundos (TimeLimit), um player só poderá matar outro player 5 (KillLimit) vezes.
+• BanTime: o tempo em que o infrator será banido.
+• Active: "true" para deixar o firewall ativo, "false" para desativar.
+
+
+ItensAward =>
+• Este é o arquivo que você configura os itens para recompensa por pontos.
+• Só é permitido itens não equipáveis (pedra imortal, baú, itens da linha 74 e 75 do RAE)
+• Deve-se respeitar o seguinte padrão no arquivo:
+"ID DO ITEM":{
+		"NOME":"NOME DO ITEM EXATAMENTE",
+		"CUSTO":"CUSTO EM PONTO DO RANKING",
+		"STACK":"QUANTO DE STACK É SUPORTADO NESTE ITEM"
+		},
+
+
+License =>
+• user: será definido por você
+• licensekey: será fornecido pelo dev
+
+
+PointsConfiguration => 
+• Aqui será configurado quantos pontos cada classe ganha/perde ao matar/morrer
+• onDeath: quantos pontos a classe PERDE ao morrer.
+• onKill: quantos pontos a classe GANHA ao matar.
+
+
+PvPChat =>
+• Aviso de mensagem: "true" para deixar ativo aviso de mensagem de pvp, "false" para desativar
+• Transferência de Pontos: "true" para deixar ativo transferência de pontos entre players (comando !transferir [player] [quantidade])
+• Canal: canal em que será enviada mensagem de pvp (conferir abaixo a relação de canais*)
+• Gold por Kill: deixar em 0 (ainda sendo implementado)
+• Mensagens: determinar, seguindo o padrão JSON, cada mensagem a ser randomizada nas interações de pvp
+• Multiple Kills: ignorar (ainda sendo implementado)
+
+
+PwServerConnection =>
+• Arquivo de conexão com os serviços do PW.
+• PW_Version: confira no anexo a relação de versão
+• Root_Path: a pasta raiz em que sua pwserver se encontra, geralmente é 'home' ou 'PWServer'
+
+
+ANEXO 1: CANAIS DISPONÍVEIS
+	Main = 0,
+	World = 1,
+	Group = 2,
+	Clan = 3,
+	InfoOrange = 6,
+	Trade = 7,
+	System = 9,
+	InfoBlue = 10,
+	Channel = 11,
+	Horn = 12,
+	Attack = 13
+	
+	
+ANEXO 2: VERSÕES DA PWSERVER
+	V116 = 6,
+	V126 = 7,
+	V131 = 10,
+	V142 = 29,
+	V14563 = 63,
+	V14569 = 69,
+	V146 = 70,
+	V147 = 80,
+	V148 = 85,
+	V150 = 88,
+	V151 = 101,
+	V153 = 145,
+	V155 = 156
+
+
+ANEXO 3: INTEGRAÇÃO COM PWADMIN
+Caso queira conexão do CoreRanking com o PwAdmin, insira no arquivo 'processes_config.ini' (dentro da pasta do PwAdmin) esse código.
+após salvar, reinicie seu PwAdmin Server:
+
+[CORE_AUTOMESSAGE]
+ProcessDir=$HOME$CoreRanking
+ProcessFileName=CoreRanking
+ProcessStart=./CoreRanking
+ProcessKill=pkill -9 CoreRanking
+ServerProcess=1
+StartSleep=3

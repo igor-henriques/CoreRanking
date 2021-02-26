@@ -1,0 +1,50 @@
+{ 
+    "WR": {
+		"onKill": "1",
+		"onDeath": "1"
+	},
+	"MG": {
+		"onKill": "1",
+		"onDeath": "1"
+	},
+	"WB": {
+		"onKill": "1",
+		"onDeath": "1"
+	},
+	"WF": {
+		"onKill": "1",
+		"onDeath": "1"
+	},
+	"EA": {
+		"onKill": "1",
+		"onDeath": "1"
+	},
+	"EP": {
+		"onKill": "1",
+		"onDeath": "1"
+	},
+	"MC": {
+		"onKill": "10",
+		"onDeath": "1"
+	},
+	"PSY": {
+		"onKill": "1",
+		"onDeath": "1"
+	},
+	"SK": {
+		"onKill": "1",
+		"onDeath": "1"
+	},
+	"MS": {
+		"onKill": "1",
+		"onDeath": "1"
+	},
+	"RT": {
+		"onKill": "1",
+		"onDeath": "1"
+	},
+	"TM": {
+		"onKill": "1",
+		"onDeath": "1"
+	}
+}

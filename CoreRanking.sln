@@ -1,0 +1,36 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30320.27
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CoreRanking", "CoreRanking\CoreRanking.csproj", "{C1EAE984-D6CC-4308-A46F-1AA4515C0A76}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{DD0983F6-15EC-4454-BBD0-9AEB80EA6FCC}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Debug|x86 = Debug|x86
+		Release|Any CPU = Release|Any CPU
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C1EAE984-D6CC-4308-A46F-1AA4515C0A76}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C1EAE984-D6CC-4308-A46F-1AA4515C0A76}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C1EAE984-D6CC-4308-A46F-1AA4515C0A76}.Debug|x86.ActiveCfg = Debug|x86
+		{C1EAE984-D6CC-4308-A46F-1AA4515C0A76}.Debug|x86.Build.0 = Debug|x86
+		{C1EAE984-D6CC-4308-A46F-1AA4515C0A76}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C1EAE984-D6CC-4308-A46F-1AA4515C0A76}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C1EAE984-D6CC-4308-A46F-1AA4515C0A76}.Release|x86.ActiveCfg = Release|x86
+		{C1EAE984-D6CC-4308-A46F-1AA4515C0A76}.Release|x86.Build.0 = Release|x86
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {D81E793F-9521-4531-BE4D-F8F4762A45F5}
+	EndGlobalSection
+EndGlobal

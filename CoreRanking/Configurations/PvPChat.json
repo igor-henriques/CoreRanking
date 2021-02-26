@@ -1,0 +1,30 @@
+{ 
+	"AVISO DE MENSAGEM":"true",
+	"TRANSFERÊNCIA DE PONTOS":"true",
+    "CANAL": "13",
+	"GOLD POR KILL":"0",
+	"MENSAGENS": {	
+		"1":"$killer acabou com a raça do $dead",
+		"2":"$dead foi morto por $killer",
+		"3":"Alguém chama o Detran! $killer está implacável!"	
+	},
+	"MULTIPLE_KILLS": {
+		"ATIVO":"true",
+		"DOUBLEKILL":{
+			"TEMPO":"10",
+			"PONTOS":"2"
+		},
+		"TRIPLEKILL":{
+			"TEMPO":"10",
+			"PONTOS":"3"
+		},
+		"QUADRAKILL":{
+			"TEMPO":"10",
+			"PONTOS":"4"
+		},
+		"PENTAKILL":{
+			"TEMPO":"15",
+			"PONTOS":"5"
+		}
+	}
+}

@@ -1,0 +1,17 @@
+{ 	
+	"GAMEDBD":{
+		"HOST":"177.54.152.61",
+		"PORT":"29400"
+	},
+	"GPROVIDER":{
+		"HOST":"177.54.152.61",
+		"PORT":"29300"		
+	},
+	"GDELIVERYD":{
+		"HOST":"177.54.152.61",
+		"PORT":"29100"
+	},
+	"PW_VERSION":"101",
+	"ROOT_PATH":"pwserver",
+	"LOGS_PATH":"/pwserver/logs/"
+}
