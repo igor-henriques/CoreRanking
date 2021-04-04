@@ -407,6 +407,7 @@ namespace CoreRanking
                 .ConfigureServices(services =>
                 {
                     services.AddTransient<Program>();
+                    services.AddTransient<ApplicationDbContext>();
                     services.AddTransient<IBattleRepository, BattleRepository>();
                     services.AddTransient<IRoleRepository, RoleRepository>();
                     services.AddTransient<IAccountRepository, AccountRepository>();
