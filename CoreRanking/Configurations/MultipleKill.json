@@ -1,0 +1,33 @@
+{
+	"ATIVO":"true",
+	"MENSAGEM INGAME":"true",
+	"CANAL":"9",
+	"DOUBLEKILL":{
+		"TEMPO":"5000",
+		"PONTOS":"2",
+		"MENSAGENS": {	
+		"1":"$killer fez um double kill"		
+		}
+	},
+	"TRIPLEKILL":{
+		"TEMPO":"8000",
+		"PONTOS":"3",
+		"MENSAGENS": {	
+		"1":"$killer matou TRÊS em sequência!"		
+		}
+	},
+	"QUADRAKILL":{
+		"TEMPO":"11000",
+		"PONTOS":"4",
+		"MENSAGENS": {	
+		"1":"$killer ESTÁ IMPLACÁVEL, QUATRO EM SEQUÊNCIA!!"		
+		}
+	},
+	"PENTAKILL":{
+		"TEMPO":"13000",
+		"PONTOS":"5",
+		"MENSAGENS": {	
+		"1":"$killer FEZ PENTA-KILL! CORRAM PARA AS COLINAS"		
+		}
+	}
+}

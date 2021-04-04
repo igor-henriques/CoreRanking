@@ -24,7 +24,7 @@
 		"onDeath": "1"
 	},
 	"MC": {
-		"onKill": "10",
+		"onKill": "1",
 		"onDeath": "1"
 	},
 	"PSY": {

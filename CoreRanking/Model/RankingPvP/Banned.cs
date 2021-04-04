@@ -1,19 +1,16 @@
-﻿using CoreRanking.Model.RankingPvP;
-using System;
+﻿using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace CoreRanking.Model.RankingPvE
+namespace CoreRanking.Model.RankingPvP
 {
-    public class Collect
+    public class Banned
     {
         [Key]
         public int Id { get; set; }
-        public int ItemId { get; set; }
         [Required][ForeignKey("Role")]
         public int RoleId { get; set; }        
         public Role Role { get; set; }
-        public int Amount { get; set; }
-        public DateTime Date { get; set; }
+        public DateTime BanTime { get; set; }
     }
 }

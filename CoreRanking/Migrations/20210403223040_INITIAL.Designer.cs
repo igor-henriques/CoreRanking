@@ -3,14 +3,16 @@ using System;
 using CoreRanking.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace CoreRanking.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20210403223040_INITIAL")]
+    partial class INITIAL
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -142,17 +144,11 @@ namespace CoreRanking.Migrations
                     b.Property<double>("CollectPoint")
                         .HasColumnType("double");
 
-                    b.Property<int>("Death")
-                        .HasColumnType("int");
-
                     b.Property<int>("Doublekill")
                         .HasColumnType("int");
 
                     b.Property<string>("Elo")
                         .HasColumnType("longtext");
-
-                    b.Property<int>("Kill")
-                        .HasColumnType("int");
 
                     b.Property<int>("Level")
                         .HasColumnType("int");

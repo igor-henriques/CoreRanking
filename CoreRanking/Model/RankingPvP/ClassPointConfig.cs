@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace CoreRanking.Model
+﻿namespace CoreRanking.Model.RankingPvP
 {
     public class ClassPointConfig
     {

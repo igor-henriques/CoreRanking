@@ -1,0 +1,13 @@
+﻿namespace CoreRanking.License
+{
+    public enum State
+    {
+        Valido,
+        Inexiste,
+        Welcome,
+        Expirado,
+        Inativo,
+        Esgotado,
+        Erro
+    }
+}

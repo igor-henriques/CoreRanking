@@ -6,70 +6,84 @@ using PWToolKit;
 using System.Threading;
 using Newtonsoft.Json;
 using System.Collections.Generic;
-using CoreRanking.Model.PwServer;
 using Newtonsoft.Json.Linq;
-using CoreRanking.Model.RankingFirewall;
 using System.Diagnostics;
 using CoreRanking.Model.ItensExchange;
-using CoreRanking.Model.PointsTransference;
 using CoreRanking.Model.Data;
 using CoreRanking.Model.RankingPvP;
-using CoreRanking.Model.RankingPvP.MultiplesKill;
 using PWToolKit.Enums;
-using CoreRanking.Models;
-using System.Linq;
 using PWToolKit.API.Gamedbd;
 using CoreRanking.Model.RankingPvE;
+using Microsoft.EntityFrameworkCore;
+using CoreRanking.Watchers;
+using CoreRanking.Model.Server;
+using CoreRanking.License;
+using CoreRanking.Data;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.DependencyInjection;
+using CoreRanking.Repositories;
+using Microsoft.Extensions.Logging;
+using PWToolKit.API.GDeliveryd;
+using System.Linq;
 
 namespace CoreRanking
 {
-    class Program
+    public class Program
     {
+        private readonly ILogger<Program> logger;
+
         static ManualResetEvent quitEvent = new ManualResetEvent(false);
         static MultipleKillWatch MultipleKillWatch;
-        static PwServerConnection pwServerConnection;
-        static PvPPrefs userPrefs;
+        static ServerConnection ServerConnection;
+        static RankingDefinitions rankingDefs;
         static PveConfiguration pveConfiguration;
-        static CoreRankingFirewall CoreRankingFirewall;
-        static LicenseControl license;
+        static FirewallWatch CoreRankingFirewall;
+        static LicenseControl license = new LicenseControl();
         static List<ItemAward> ItemsReward;
         static List<ClassPointConfig> classPointConfig;
-        static LogWriter newLog;
         static Elo elo;
+
+        public Program(ILogger<Program> logger)
+        {
+            this.logger = logger;
+        }
 
         static async Task Main()
         {
-            await InitializePrefs();
-
-            Console.WriteLine("PROGRAMADO POR IRONSIDE\nBOM USO!\nDiscord para Report Bug: Ironside#3862\n=============================================================");
-
             try
             {
-                await Run();
+                var host = CreateHostBuilder().Build();
+                await host.Services.GetRequiredService<Program>().Run();
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.ToString());
-                newLog = new LogWriter(ex.ToString());
+                LogWriter.Write(ex.ToString());
             }
 
             Stop();
         }
+        async Task Run()
+        {
+            await InitializePrefs();
 
+            PvPWatch.Start(ServerConnection, rankingDefs, classPointConfig);
+            RoleWatch.Start(ServerConnection, rankingDefs);
+        }
         static async Task InitializePrefs()
         {
-            Console.WriteLine("CHECANDO PROCESSO EXISTENTE\n");
+            Console.WriteLine("CHECANDO PROCESSOS EXISTENTES\n");
             await CheckProcess();
 
             Console.WriteLine("CHECANDO VERSÃO ATUAL\n");
+            //A IMPLEMENTAR
 
             Console.WriteLine("INICIALIZANDO SISTEMA DE LICENÇA\n");
             CoreLicense licenseConfigs = JsonConvert.DeserializeObject<CoreLicense>(await File.ReadAllTextAsync("./Configurations/License.json"));
-            license = new LicenseControl(licenseConfigs.user, licenseConfigs.licensekey);            
+            await license.Start(licenseConfigs.User, licenseConfigs.Licensekey, licenseConfigs.Product);
 
             Console.WriteLine("INICIALIZANDO CONFIGURAÇÕES DE SERVIDOR\n");
-            JObject jsonServerConfig = (JObject)JsonConvert.DeserializeObject(await File.ReadAllTextAsync("./Configurations/PwServerConnection.json"));
-            pwServerConnection = await LoadServerConfig(jsonServerConfig);
+            JObject jsonServerConfig = (JObject)JsonConvert.DeserializeObject(await File.ReadAllTextAsync("./Configurations/ServerConnection.json"));
+            ServerConnection = await LoadServerConfig(jsonServerConfig);
 
             Console.WriteLine("INICIALIZANDO SISTEMA DE PONTUAÇÕES\n");
             JObject jsonPointsConfig = (JObject)JsonConvert.DeserializeObject(await File.ReadAllTextAsync("./Configurations/PointsConfiguration.json"));
@@ -81,14 +95,14 @@ namespace CoreRanking
 
             Console.WriteLine("INICIALIZANDO SISTEMA DE MULTIPLE-KILL\n");
             JObject jsonMultipleKill = (JObject)JsonConvert.DeserializeObject(await File.ReadAllTextAsync("./Configurations/MultipleKill.json"));
-            MultipleKillWatch = new MultipleKillWatch(await LoadMultipleKillConfig(jsonMultipleKill), pwServerConnection);
+            MultipleKillWatch = new MultipleKillWatch(await LoadMultipleKillConfig(jsonMultipleKill), ServerConnection);
 
             Console.WriteLine("INICIALIZANDO CONFIGURAÇÕES DE ELO\n");
             elo = JsonConvert.DeserializeObject<Elo>(await File.ReadAllTextAsync("./Configurations/EloConfiguration.json"));
 
             Console.WriteLine("INICIALIZANDO CONFIGURAÇÕES DE USUÁRIO\n");
-            JObject jsonUserPrefs = (JObject)JsonConvert.DeserializeObject(await File.ReadAllTextAsync("./Configurations/PvPChat.json"));
-            userPrefs = await LoadPvPPreferences(jsonUserPrefs);
+            JObject jsonrankingDefs = (JObject)JsonConvert.DeserializeObject(await File.ReadAllTextAsync("./Configurations/RankingDefinitions.json"));
+            rankingDefs = await LoadPvPPreferences(jsonrankingDefs);
 
             Console.WriteLine("INICIALIZANDO CONFIGURAÇÕES DE PVE\n");
             JObject jsonPvePoints = (JObject)JsonConvert.DeserializeObject(await File.ReadAllTextAsync("./Configurations/PvePoints.json"));
@@ -96,7 +110,7 @@ namespace CoreRanking
 
             Console.WriteLine("INICIALIZANDO CONFIGURAÇÕES DE FIREWALL\n");
             FirewallDefinitions defs = JsonConvert.DeserializeObject<FirewallDefinitions>(await File.ReadAllTextAsync("./Configurations/Firewall.json"));
-            CoreRankingFirewall = new CoreRankingFirewall(defs, pwServerConnection);
+            CoreRankingFirewall = new FirewallWatch(defs, ServerConnection);
 
             if (Convert.ToBoolean(await File.ReadAllTextAsync("./Configurations/UpdateLevel.conf")))
             {
@@ -105,54 +119,109 @@ namespace CoreRanking
             }
 
             Console.WriteLine("INICIALIZANDO HOOK DE CHAT\n");
-            WorldChatWatch worldChat = new WorldChatWatch(pwServerConnection, classPointConfig, userPrefs);
+            WorldChatWatch worldChat = new WorldChatWatch(ServerConnection, rankingDefs);
 
             Console.WriteLine("INICIALIZANDO SISTEMA DE TRANSFERÊNCIA DE PONTOS\n");
-            TransferWatch transferenceSystem = new TransferWatch(pwServerConnection, userPrefs);
+            TransferWatch transferenceSystem = new TransferWatch(ServerConnection, rankingDefs);
 
             Console.WriteLine("INICIALIZANDO SISTEMA DE RANKING PVE\n");
-            await PvEWatcher.Start(pwServerConnection, pveConfiguration);
+            await PvEWatcher.Start(ServerConnection, pveConfiguration);
+
+            await EnsureOnlineRoleCreation();
 
             Console.WriteLine("MÓDULOS INICIALIZADOS COM SUCESSO\n\n\n");
-            newLog = new LogWriter("TODOS OS MÓDULOS FORAM INICIALIZADOS COM SUCESSO");
+
+            Console.WriteLine("PROGRAMADO POR IRONSIDE\nBOM USO!\nDiscord para Report Bug: Ironside#3862\n=============================================================");
         }
-        static async Task UpdateRoleLevel()
+        private static async Task EnsureOnlineRoleCreation()
+        {
+            try
+            {
+                using (var db = new ApplicationDbContext())
+                {
+                    if (await db.Role.CountAsync() <= 0)
+                    {
+                        LogWriter.Write("CADASTRANDO JOGADORES ONLINE");
+
+                        List<Account> usersAccounts = new List<Account>();
+                        List<Role> users = new List<Role>();
+
+                        var onlineUsers = GMListOnlineUser.Get(ServerConnection.gdeliveryd);
+
+                        foreach (var user in onlineUsers)
+                        {
+                            var extraInfo = GetRoleData.Get(ServerConnection.gamedbd, user.RoleId);
+
+                            usersAccounts.Add(new Account
+                            {
+                                Id = user.UserId,
+                            });
+
+                            users.Add(new Role
+                            {
+                                AccountId = user.UserId,
+                                RoleId = user.RoleId,
+                                CharacterClass = extraInfo.GRoleBase.Class.ToString(),
+                                CharacterName = extraInfo.GRoleBase.Name,
+                                CharacterGender = extraInfo.GRoleBase.Gender == 0 ? "Male" : "Female",
+                                Level = extraInfo.GRoleStatus.Level
+                            });
+
+                            LogWriter.Write($"Jogador {extraInfo.GRoleBase.Name}(RoleID: {extraInfo.GRoleBase.Id} | AccountID: {extraInfo.GRoleBase.UserId}) inserido no Ranking. Nível: {extraInfo.GRoleStatus.Level}");
+                            PrivateChat.Send(ServerConnection.gdeliveryd, extraInfo.GRoleBase.Id, "Você foi inserido no Core Ranking!");
+                        }
+
+                        await db.Role.AddRangeAsync(users);
+                        await db.Account.AddRangeAsync(usersAccounts);
+
+                        await db.SaveChangesAsync();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                LogWriter.Write(ex.ToString());
+            }
+        }
+        private static async Task UpdateRoleLevel()
         {
             using (var db = new ApplicationDbContext())
             {
-                bool updatedNeeded = false;
-                PWGlobal.UsedPwVersion = pwServerConnection.PwVersion;
+                PWGlobal.UsedPwVersion = ServerConnection.PwVersion;
                 List<Role> ToRemove = new List<Role>();
                 Console.WriteLine("\n\n");
 
-                foreach (var role in db.Role.ToList())
-                {                       
-                    var currentRole = GetRoleData.Get(pwServerConnection.gamedbd, role.RoleId);
+                var roles = await db.Role.ToListAsync();
+
+                foreach (var role in roles)
+                {
+                    var currentRole = GetRoleData.Get(ServerConnection.gamedbd, role.RoleId);
 
                     if (currentRole != null)
                     {
                         if (currentRole.GRoleStatus.Level > role.Level)
                         {
                             role.Level = currentRole.GRoleStatus.Level;
-                            updatedNeeded = true;
                             Console.WriteLine($"Nível mais atualizado disponível para o personagem {role.CharacterName}. \nLevel atualizado: {currentRole.GRoleStatus.Level}\nLevel atual: {role.Level}");
                         }
                     }
                     else
                     {
                         Console.WriteLine($"Personagem {role.CharacterName} existe no registro do ranking, mas não no registro do jogo. Marcando para exclusão.");
-                        ToRemove.Add(role);                        
+                        ToRemove.Add(role);
                     }
                 }
 
-                Console.WriteLine("Não foi encontrado nenhum personagem que seja necessário atualizar o nível.");
+                if (roles.Count <= 0)
+                    Console.WriteLine("Não foi encontrado nenhum personagem que seja necessário atualizar o nível.");
+
                 Console.WriteLine("===========================================================================");
 
                 foreach (var role in ToRemove)
-                {                                        
+                {
                     string answer = default;
 
-                    while(answer != "Y" && answer != "N")
+                    while (answer != "Y" && answer != "N")
                     {
                         Console.WriteLine($"\nDeseja remover o personagem {role.CharacterName}(ID: {role.RoleId}) da base do ranking? Y/N");
                         answer = Console.ReadLine().Trim().ToUpper();
@@ -163,7 +232,7 @@ namespace CoreRanking
 
                             Console.WriteLine("Personagem removido.");
                         }
-                    }                    
+                    }
                 }
 
                 Console.WriteLine("\n");
@@ -181,18 +250,13 @@ namespace CoreRanking
                 if (!ProcessesList[i].Equals(p))
                 {
                     ProcessesList[i].Kill();
-                    newLog = new LogWriter("ELIMINANDO PROCESSO PRÉ-EXISTENTE");
+                    LogWriter.Write("ELIMINANDO PROCESSO PRÉ-EXISTENTE");
                 }
             }
         }
-        static async Task Run()
+        static async Task<ServerConnection> LoadServerConfig(JObject jsonNodes)
         {
-            PvPWatch.Start(pwServerConnection, userPrefs, classPointConfig);
-            RoleWatch.Start(pwServerConnection);
-        }
-        static async Task<PwServerConnection> LoadServerConfig(JObject jsonNodes)
-        {
-            PwServerConnection pwServerConnection = new PwServerConnection
+            ServerConnection ServerConnection = new ServerConnection
             (
                 jsonNodes["GAMEDBD"]["HOST"].ToObject<string>(),
                 jsonNodes["GAMEDBD"]["PORT"].ToObject<int>(),
@@ -201,11 +265,10 @@ namespace CoreRanking
                 jsonNodes["GDELIVERYD"]["HOST"].ToObject<string>(),
                 jsonNodes["GDELIVERYD"]["PORT"].ToObject<int>(),
                 (PwVersion)jsonNodes["PW_VERSION"].ToObject<int>(),
-                jsonNodes["ROOT_PATH"].ToObject<string>(),
                 jsonNodes["LOGS_PATH"].ToObject<string>()
             );
 
-            return pwServerConnection;
+            return ServerConnection;
         }
 
         static async Task<MultipleKill> LoadMultipleKillConfig(JObject jsonNodes)
@@ -223,7 +286,7 @@ namespace CoreRanking
                 }
 
                 messages.Add(messagePerMultiplier);
-            }            
+            }
 
             MultipleKill MultipleKill = new MultipleKill()
             {
@@ -238,7 +301,7 @@ namespace CoreRanking
                     Messages = messages[0]
                 },
 
-                TripleKill = new TripleKill 
+                TripleKill = new TripleKill
                 {
                     Time = jsonNodes["TRIPLEKILL"]["TEMPO"].ToObject<double>(),
                     Points = jsonNodes["TRIPLEKILL"]["PONTOS"].ToObject<int>(),
@@ -252,7 +315,7 @@ namespace CoreRanking
                     Messages = messages[2]
                 },
 
-                PentaKill = new PentaKill 
+                PentaKill = new PentaKill
                 {
                     Time = jsonNodes["PENTAKILL"]["TEMPO"].ToObject<double>(),
                     Points = jsonNodes["PENTAKILL"]["PONTOS"].ToObject<int>(),
@@ -280,7 +343,7 @@ namespace CoreRanking
 
             return classesPointsConfig;
         }
-        static async Task<PvPPrefs> LoadPvPPreferences(JObject jsonNodes)
+        static async Task<RankingDefinitions> LoadPvPPreferences(JObject jsonNodes)
         {
             List<string> messages = new List<string>();
             foreach (var package in jsonNodes["MENSAGENS"].Children())
@@ -288,7 +351,7 @@ namespace CoreRanking
                 messages.Add(package.First.ToString());
             }
 
-            PvPPrefs prefs = new PvPPrefs
+            RankingDefinitions prefs = new RankingDefinitions
             (
                 jsonNodes["AVISO DE MENSAGEM"].ToObject<bool>(),
                 jsonNodes["CANAL"].ToObject<int>(),
@@ -300,7 +363,12 @@ namespace CoreRanking
                 jsonNodes["TOLERANCIA DE LEVEL"].ToObject<int>(),
                 jsonNodes["TOLERANCIA DE PONTO"].ToObject<int>(),
                 jsonNodes["MOSTRAR KDA"].ToObject<bool>(),
-                jsonNodes["ATIVAR TRIGGERS"].ToObject<bool>()
+                jsonNodes["ATIVAR TRIGGERS"].ToObject<bool>(),
+                jsonNodes["LIMITE MINIMO DE PONTOS"].ToObject<int>(),
+                jsonNodes["QUANTIDADE DE JOGADORES NO TOPRANK"].ToObject<int>(),
+                jsonNodes["COR DA MENSAGEM"].ToObject<string>(),
+                new List<int>(),
+                jsonNodes["ID DA MISSAO QUE RESETA KDA"].ToObject<int>()
             );
 
             return prefs;
@@ -333,7 +401,20 @@ namespace CoreRanking
 
             return itemsAward;
         }
-        
+        private static IHostBuilder CreateHostBuilder()
+        {
+            return Host.CreateDefaultBuilder()
+                .ConfigureServices(services =>
+                {
+                    services.AddTransient<Program>();
+                    services.AddTransient<IBattleRepository, BattleRepository>();
+                    services.AddTransient<IRoleRepository, RoleRepository>();
+                    services.AddTransient<IAccountRepository, AccountRepository>();
+                    services.AddTransient<IHuntRepository, HuntRepository>();
+                    services.AddTransient<ICollectRepository, CollectRepository>();
+                    services.AddTransient<IBannedRepository, BannedRepository>();
+                });
+        }
         static void Stop()
         {
             Console.CancelKeyPress += (sender, eArgs) =>

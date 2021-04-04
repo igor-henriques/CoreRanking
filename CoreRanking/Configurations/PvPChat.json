@@ -3,28 +3,15 @@
 	"TRANSFERÊNCIA DE PONTOS":"true",
     "CANAL": "13",
 	"GOLD POR KILL":"0",
+	"TOLERANCIA DE LEVEL":"10",
+	"TOLERANCIA DE PONTO":"-50",
+	"MOSTRAR KDA":"true",
+	"ATIVAR TRIGGERS":"true",
+	"LIMITE MINIMO DE PONTOS":"-10",
+	"QUANTIDADE DE JOGADORES NO TOPRANK":"5",
 	"MENSAGENS": {	
 		"1":"$killer acabou com a raça do $dead",
 		"2":"$dead foi morto por $killer",
 		"3":"Alguém chama o Detran! $killer está implacável!"	
-	},
-	"MULTIPLE_KILLS": {
-		"ATIVO":"true",
-		"DOUBLEKILL":{
-			"TEMPO":"10",
-			"PONTOS":"2"
-		},
-		"TRIPLEKILL":{
-			"TEMPO":"10",
-			"PONTOS":"3"
-		},
-		"QUADRAKILL":{
-			"TEMPO":"10",
-			"PONTOS":"4"
-		},
-		"PENTAKILL":{
-			"TEMPO":"15",
-			"PONTOS":"5"
-		}
 	}
 }
