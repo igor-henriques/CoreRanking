@@ -2,11 +2,13 @@
 {
     public enum Product
     {
+        Nenhum,
         Ranking,
         Meridian,
         Trivia,
         ChatTrigger,
         GoldWarning,
+        GoldQuest,
         Sutra,
         AutoMessage,
         ChestOpener,

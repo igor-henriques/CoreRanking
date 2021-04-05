@@ -13,7 +13,6 @@ namespace CoreRanking.License
         private static string licenseKey;
         private static string hwid = default;
         private static Product product;
-        private static LogWriter newLog;
 
         public State _response = State.Erro;
 

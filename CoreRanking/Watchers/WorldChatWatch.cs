@@ -279,7 +279,7 @@ namespace CoreRanking.Watchers
 
                     if (topPlayers.Count > 0)
                     {
-                        topPlayers.ForEach(async x => await SendMessage($"{topPlayers.IndexOf(x) + 1}º lugar: {x.CharacterName}. Nível {x.Level}", rankingDefs.Channel, server));
+                        topPlayers.ForEach(async x => await SendMessage($"{topPlayers.IndexOf(x) + 1}º lugar: {x.CharacterName}. Kills {x.Kill}", rankingDefs.Channel, server));
                     }
                     else
                     {
@@ -540,7 +540,7 @@ namespace CoreRanking.Watchers
                             ToListAsync();
                     }
 
-                    return topPlayers;
+                    return topPlayers.Where(x => x.Kill > 0).ToList();
                 }
             }
             catch (Exception ex)
@@ -558,11 +558,11 @@ namespace CoreRanking.Watchers
 
                 using (var db = new ApplicationDbContext())
                 {
+                    await EnsureGMLevelDown(GMRoles);
+
                     //Se alguma informação de classe foi providenciada
                     if (!string.IsNullOrEmpty(classe))
-                    {
-                        await EnsureGMLevelDown(GMRoles);
-
+                    {                        
                         var listByClass = await db.Role.
                             Where(x => x.CharacterClass.Equals(ConvertClassToGameStructure(classe), StringComparison.Ordinal)).
                             OrderByDescending(y => y.Level).Take(rankingDefs.AmountPlayersOnPodium).ToListAsync();
@@ -571,9 +571,10 @@ namespace CoreRanking.Watchers
                     }
                     else
                     {
-                        var allRoles = await db.Role.OrderByDescending(x => x.Level).Take(rankingDefs.AmountPlayersOnPodium).ToListAsync();
-                        roles = allRoles;
+                        roles = await db.Role.OrderByDescending(x => x.Level).Take(rankingDefs.AmountPlayersOnPodium).ToListAsync();                        
                     }
+
+                    roles = roles.Where(x => x.Level > 0).ToList();
 
                     roles.ForEach(async x => await SendMessage($"{roles.IndexOf(x) + 1}º lugar: {x.CharacterName}. Nível {x.Level}", rankingDefs.Channel, server));
 
@@ -656,10 +657,13 @@ namespace CoreRanking.Watchers
             {
                 using (var db = new ApplicationDbContext())
                 {
-                    GMs.ForEach(x => x.Level = 1);
+                    List<Role> gmRoles = await db.Role.Where(x => GMs.Select(y => y.RoleId).Contains(x.RoleId)).ToListAsync();
+
+                    gmRoles.ForEach(x => x.Level = 0);
+
                     await db.SaveChangesAsync();
 
-                    LogWriter.Write("Foi atribuído nível 1 a todos personagens de GMs no ranking.");
+                    LogWriter.Write("Foi atribuído nível 0 a todos personagens de GMs no ranking.");
                 }
             }
             catch (Exception ex)

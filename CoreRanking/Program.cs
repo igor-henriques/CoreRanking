@@ -201,8 +201,9 @@ namespace CoreRanking
                     {
                         if (currentRole.GRoleStatus.Level > role.Level)
                         {
-                            role.Level = currentRole.GRoleStatus.Level;
                             Console.WriteLine($"Nível mais atualizado disponível para o personagem {role.CharacterName}. \nLevel atualizado: {currentRole.GRoleStatus.Level}\nLevel atual: {role.Level}");
+
+                            role.Level = currentRole.GRoleStatus.Level;
                         }
                     }
                     else

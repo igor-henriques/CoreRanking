@@ -111,36 +111,31 @@ namespace CoreRanking.Watchers
         {
             try
             {
+                var verifiedData = await EnsureRoleCreation(battleData);
+
                 using (var db = new ApplicationDbContext())
                 {
                     db.Battle.Add(battleData);
+
                     await db.SaveChangesAsync();
                 }
-                    var verifiedData = await EnsureRoleCreation(battleData);
 
-                    if (verifiedData is null)
-                        return default;
+                if (verifiedData is null)
+                    return default;
 
-                    battleData.KilledRole = verifiedData.KilledRole;
-                    battleData.KillerRole = verifiedData.KillerRole;                    
+                if (await CheckBan(verifiedData))
+                    return default;
 
-                    if (await CheckBan(battleData))
-                        return default;
+                if (await CheckIP(verifiedData))
+                    return default;
 
-                    if (await CheckIP(battleData))
-                        return default;
+                if (await CheckLevelRange(verifiedData))
+                    return default;
 
-                    if (await CheckLevelRange(battleData))
-                        return default;
+                if (await CheckPointLimit(verifiedData))
+                    return default;
 
-                    if (await CheckPointLimit(battleData))
-                        return default;
-
-                    await CheckDeathMinimumPoint(battleData);                                        
-
-                    GiveCash(battleData.KillerRole.AccountId);
-                    
-                    return new Tuple<Role, Role, int>(battleData.KilledRole, battleData.KillerRole, battleData.KillerRole.Kill);                
+                return await LastChecks(verifiedData);                                
             }
             catch (Exception ex)
             {
@@ -149,38 +144,44 @@ namespace CoreRanking.Watchers
 
             return default;
         }
-        private static async Task CheckDeathMinimumPoint(Battle battleData)
+        private static async Task<Tuple<Role, Role, int>> LastChecks(Battle battleData)
         {
             try
             {
                 using (var db = new ApplicationDbContext())
                 {
-                    if (battleData.KilledRole.Points > prefs.MinimumPoints)
-                    {
-                        Role killerRole = await db.Role.FindAsync(battleData.KillerId);
+                    Role KillerRole = await db.Role.FindAsync(battleData.KillerId);
+                    Role KilledRole = await db.Role.FindAsync(battleData.KilledId);
 
-                        killerRole.Points += classesPointsConfig.Where(x => x.Ocuppation.Equals(ConvertClass(battleData.KillerRole.CharacterClass))).Select(x => x.onKill).FirstOrDefault();                                                
-                        killerRole.Kill += 1;
+                    if (KilledRole.Points > prefs.MinimumPoints)
+                    {
+                        KillerRole.Points += classesPointsConfig.Where(x => x.Ocuppation.Equals(ConvertClass(KillerRole.CharacterClass))).Select(x => x.onKill).FirstOrDefault();
+                        KillerRole.Kill += 1;
                     }
                     else
                     {
-                        PrivateChat.Send(server.gdeliveryd, battleData.KilledRole.RoleId, "Você não contará pontos no PvP porque atingiu o limite mínimo de pontos. PS: você ainda perderá pontos ao morrer.");
-                        PrivateChat.Send(server.gdeliveryd, battleData.KillerRole.RoleId, $"Você não ganhará pontos no PvP ao matar {battleData.KilledRole.CharacterName} porque o(a) jogador(a) atingiu o limite mínimo de pontos para ser válido no PvP.");
+                        PrivateChat.Send(server.gdeliveryd, KilledRole.RoleId, "Você não contará pontos no PvP porque atingiu o limite mínimo de pontos. PS: você ainda perderá pontos ao morrer.");
+                        PrivateChat.Send(server.gdeliveryd, KillerRole.RoleId, $"Você não ganhará pontos no PvP ao matar {KilledRole.CharacterName} porque o(a) jogador(a) atingiu o limite mínimo de pontos para ser válido no PvP.");
 
-                        LogWriter.Write($"Personagem {battleData.KilledRole.CharacterName} atingiu o limite mínimo de pontos ({prefs.MinimumPoints} e por isso não perdeu mais pontos por ter morrido.");
+                        LogWriter.Write($"Personagem {KilledRole.CharacterName} atingiu o limite mínimo de pontos ({prefs.MinimumPoints} e por isso não perdeu mais pontos por ter morrido.");
                     }
 
-                    Role killedRole = await db.Role.FindAsync(battleData.KilledId);
-                    killedRole.Death += 1;
-                    killedRole.Points -= classesPointsConfig.Where(x => x.Ocuppation.Equals(ConvertClass(battleData.KilledRole.CharacterClass))).Select(x => x.onDeath).FirstOrDefault();
+                    KilledRole.Death += 1;
+                    KilledRole.Points -= classesPointsConfig.Where(x => x.Ocuppation.Equals(ConvertClass(KilledRole.CharacterClass))).Select(x => x.onDeath).FirstOrDefault();
+
+                    GiveCash(KillerRole.AccountId);
 
                     await db.SaveChangesAsync();
+
+                    return new Tuple<Role, Role, int>(KilledRole, KillerRole, KillerRole.Kill);
                 }
             }
             catch (Exception ex)
             {
                 LogWriter.Write(ex.ToString());
             }
+
+            return default;
         }
 
         /// <summary>
@@ -352,7 +353,7 @@ namespace CoreRanking.Watchers
                         }
                     }
 
-                    return new Battle { KilledRole = killedChar, KillerRole = killerChar };
+                    return new Battle { KilledRole = killedChar, KillerRole = killerChar, KilledId = killedChar.RoleId, KillerId = killerChar.RoleId };
                 }
             }
             catch (Exception ex)
@@ -411,12 +412,12 @@ namespace CoreRanking.Watchers
             string message;
 
             if (prefs.Channel is PWToolKit.Enums.BroadcastChannel.System)
-            {                
-                message = prefs.Messages.ElementAt(new Random().Next(prefs.Messages.Length)).Replace("$killer", $"&{killer}&").Replace("$dead", $"&{dead}&") + ". Kills: " + kills + (prefs.ShowKDA ? $". KDA: {(await WorldChatWatch.GetKDA(killer)).ToString("0.00")}" : default);
+            {
+                message = prefs.Messages.ElementAt(new Random().Next(prefs.Messages.Length)).Replace("$killer", $"&{killer}&").Replace("$dead", $"&{dead}&") + (prefs.ShowKDA ? $".Kills: {kills}. KDA: {(await WorldChatWatch.GetKDA(killer)).ToString("0.00")}." : default);
             }
             else
             {
-                message = prefs.Messages.ElementAt(new Random().Next(prefs.Messages.Length)).Replace("$killer", $"{killer}").Replace("$dead", $"{dead}") + ". Kills: " + kills + (prefs.ShowKDA ? $". KDA: {(await WorldChatWatch.GetKDA(killer)).ToString("0.00")}" : default);
+                message = prefs.Messages.ElementAt(new Random().Next(prefs.Messages.Length)).Replace("$killer", $"{killer}").Replace("$dead", $"{dead}") + (prefs.ShowKDA ? $".Kills: {kills}. KDA: {(await WorldChatWatch.GetKDA(killer)).ToString("0.00")}." : default);
             }
 
             return message;

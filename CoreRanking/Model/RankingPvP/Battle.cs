@@ -11,9 +11,9 @@ namespace CoreRanking.Model.RankingPvP
         public DateTime Date { get; set; }
         [Required][ForeignKey("KillerRole")]
         public int KillerId { get; set; }        
-        public Role KillerRole { get; set; }
+        public virtual Role KillerRole { get; set; }
         [Required][ForeignKey("KilledRole")]
         public int KilledId { get; set; }        
-        public Role KilledRole { get; set; }
+        public virtual Role KilledRole { get; set; }
     }
 }

@@ -8,6 +8,7 @@
         Expirado,
         Inativo,
         Esgotado,
+        InvalidProduct,
         Erro
     }
 }

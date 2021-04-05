@@ -74,6 +74,8 @@ namespace CoreRanking.Watchers
                     {
                         Role currentRole = db.Role.Where(x => x.RoleId.Equals(info.Collect.First().RoleId)).FirstOrDefault();
 
+                        //RoleWatch.CreateAccount(info.Collect.First().RoleId());
+
                         if (currentRole != null)
                         {
                             foreach (var item in info.Collect)
