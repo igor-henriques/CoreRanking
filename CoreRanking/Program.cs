@@ -171,10 +171,8 @@ namespace CoreRanking
                             PrivateChat.Send(ServerConnection.gdeliveryd, extraInfo.GRoleBase.Id, "Você foi inserido no Core Ranking!");
                         }
 
-                        await db.Role.AddRangeAsync(users);
-                        await db.Account.AddRangeAsync(usersAccounts);
-
-                        await db.SaveChangesAsync();
+                        usersAccounts.ForEach(async x => await RoleWatch.AddAccountIfNotExists(x));
+                        users.ForEach(async x => await RoleWatch.AddRoleIfNotExists(x));
                     }
                 }
             }

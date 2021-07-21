@@ -253,7 +253,7 @@ namespace CoreRanking.Watchers
                     if (killerIp is null || killedIp is null)
                     {
                         if (killedIp is null)
-                            PrivateChat.Send(server.gdeliveryd, battleData.KillerRole.RoleId, $"Você não ganhará pontos por matar {battleData.KillerRole.CharacterName} até que ele relogue a conta para entrar no Ranking.");
+                            PrivateChat.Send(server.gdeliveryd, battleData.KillerRole.RoleId, $"Você não ganhará pontos por matar {battleData.KilledRole.CharacterName} até que ele relogue a conta para entrar no Ranking.");
 
                         if (killerIp is null)
                             PrivateChat.Send(server.gdeliveryd, battleData.KilledRole.RoleId, $"Você não está participando do Ranking até que relogue sua conta.");
@@ -413,11 +413,11 @@ namespace CoreRanking.Watchers
 
             if (prefs.Channel is PWToolKit.Enums.BroadcastChannel.System)
             {
-                message = prefs.Messages.ElementAt(new Random().Next(prefs.Messages.Length)).Replace("$killer", $"&{killer}&").Replace("$dead", $"&{dead}&") + (prefs.ShowKDA ? $".Kills: {kills}. KDA: {(await WorldChatWatch.GetKDA(killer)).ToString("0.00")}." : default);
+                message = prefs.Messages.ElementAt(new Random().Next(prefs.Messages.Length)).Replace("$killer", $"&{killer}&").Replace("$dead", $"&{dead}&") + (prefs.ShowKDA ? $". Kills: {kills}. KDA: {(await WorldChatWatch.GetKDA(killer)).ToString("0.00")}" : default);
             }
             else
             {
-                message = prefs.Messages.ElementAt(new Random().Next(prefs.Messages.Length)).Replace("$killer", $"{killer}").Replace("$dead", $"{dead}") + (prefs.ShowKDA ? $".Kills: {kills}. KDA: {(await WorldChatWatch.GetKDA(killer)).ToString("0.00")}." : default);
+                message = prefs.Messages.ElementAt(new Random().Next(prefs.Messages.Length)).Replace("$killer", $"{killer}").Replace("$dead", $"{dead}") + (prefs.ShowKDA ? $". Kills: {kills}. KDA: {(await WorldChatWatch.GetKDA(killer)).ToString("0.00")}" : default);
             }
 
             return message;

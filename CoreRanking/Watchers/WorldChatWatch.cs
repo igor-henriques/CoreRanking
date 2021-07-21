@@ -565,13 +565,13 @@ namespace CoreRanking.Watchers
                     {                        
                         var listByClass = await db.Role.
                             Where(x => x.CharacterClass.Equals(ConvertClassToGameStructure(classe), StringComparison.Ordinal)).
-                            OrderByDescending(y => y.Level).Take(rankingDefs.AmountPlayersOnPodium).ToListAsync();
+                            OrderByDescending(y => y.Level).ThenByDescending(y => y.LevelDate).Take(rankingDefs.AmountPlayersOnPodium).ToListAsync();
 
                         roles = listByClass;
                     }
                     else
                     {
-                        roles = await db.Role.OrderByDescending(x => x.Level).Take(rankingDefs.AmountPlayersOnPodium).ToListAsync();                        
+                        roles = await db.Role.OrderByDescending(x => x.Level).ThenByDescending(y => y.LevelDate).Take(rankingDefs.AmountPlayersOnPodium).ToListAsync();                        
                     }
 
                     roles = roles.Where(x => x.Level > 0).ToList();

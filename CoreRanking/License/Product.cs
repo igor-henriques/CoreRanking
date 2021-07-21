@@ -15,6 +15,7 @@
         Giftcode,
         LogWatch,
         Discord,
-        Completo
+        Completo,
+        Pincash
     }
 }

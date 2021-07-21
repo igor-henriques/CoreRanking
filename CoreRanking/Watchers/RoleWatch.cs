@@ -150,6 +150,7 @@ namespace CoreRanking.Watchers
                     if (role != null)
                     {
                         role.Level = role.Level >= curLevel ? role.Level : curLevel;
+                        role.LevelDate = DateTime.Now;
 
                         await db.SaveChangesAsync();
 
@@ -182,7 +183,29 @@ namespace CoreRanking.Watchers
 
                         LogWriter.Write($"Conta {account.Id} criada. IP: {account.Ip} | Login: {account.Login}");
 
-                        await db.Account.AddAsync(account);
+                        /*var accountRoles = GetUserRoles.Get(server.gamedbd, account.Id);
+
+                        List<Role> rolesAccount = new List<Role>();
+                        foreach (var role in accountRoles)
+                        {
+                            var currentRole = GetRoleData.Get(server.gdeliveryd, role.Item1);
+
+                            rolesAccount.Add(new Role
+                            {
+                                AccountId = account.Id,
+                                Account = account,
+                                CharacterClass = currentRole.GRoleBase.Class.ToString(),
+                                CharacterName = currentRole.GRoleBase.Name,
+                                Level = currentRole.GRoleStatus.Level,
+                                RoleId = currentRole.GRoleBase.Id
+                            });
+
+                            LogWriter.Write($"Personagem {currentRole.GRoleBase.Name}({currentRole.GRoleBase.Id}) foi adicionado ao ranking");
+                        }
+
+                        rolesAccount.ForEach(async x => await AddRoleIfNotExists(x));*/
+
+                        await AddAccountIfNotExists(account);                        
                     }
                     else
                     {
@@ -190,7 +213,7 @@ namespace CoreRanking.Watchers
                         account.Login = login;
 
                         LogWriter.Write($"A conta de login {login}({userId}) se conectou ao servidor com o IP {ip}");
-                    }                    
+                    }
 
                     await db.SaveChangesAsync();
                 }
@@ -216,27 +239,27 @@ namespace CoreRanking.Watchers
                         {
                             GRoleData characterInfo = GetRoleData.Get(pwServerConnection.gamedbd, roleId);
 
-                            roleData.CharacterGender = characterInfo.GRoleBase.Gender == 0 ? "Male" : "Female";
-                            roleData.Level = characterInfo.GRoleStatus.Level;
-                            roleData.AccountId = characterInfo.GRoleBase.UserId;
-                            roleData.RoleId = roleId;
-                            roleData.CharacterClass = characterInfo.GRoleBase.Class.ToString();
-                            roleData.CharacterName = characterInfo.GRoleBase.Name;
-
-                            if (!db.Account.ToList().Select(x => x.Id).Contains(characterInfo.GRoleBase.UserId))
+                            if (characterInfo != null)
                             {
-                                db.Account.Add(new Account
+                                roleData.CharacterGender = characterInfo.GRoleBase.Gender == 0 ? "Male" : "Female";
+                                roleData.Level = characterInfo.GRoleStatus.Level;
+                                roleData.AccountId = characterInfo.GRoleBase.UserId;
+                                roleData.RoleId = roleId;
+                                roleData.CharacterClass = characterInfo.GRoleBase.Class.ToString();
+                                roleData.CharacterName = characterInfo.GRoleBase.Name;
+
+                                if (!db.Account.ToList().Select(x => x.Id).Contains(characterInfo.GRoleBase.UserId))
                                 {
-                                    Id = characterInfo.GRoleBase.UserId
-                                });
-                            }
+                                    await AddAccountIfNotExists(new Account
+                                    {
+                                        Id = characterInfo.GRoleBase.UserId
+                                    });                                    
+                                }
 
-                            await db.Role.AddAsync(roleData);
-                        }
-
-                        await db.SaveChangesAsync();
-
-                        LogWriter.Write($"O personagem {roleData.CharacterName} foi incluído no Ranking.");
+                                await AddRoleIfNotExists(roleData);
+                                LogWriter.Write($"O personagem {roleData.CharacterName} foi incluído no Ranking.");
+                            }                                                       
+                        }                     
                     }
 
                     return roleData;
@@ -376,7 +399,43 @@ namespace CoreRanking.Watchers
             catch (Exception ex)
             {
                 LogWriter.Write(ex.ToString());
-            }            
+            }
+        }
+        public static async Task AddRoleIfNotExists(Role role)
+        {
+            try
+            {
+                using (var db = new ApplicationDbContext())
+                {
+                    if (db.Role.Where(x => x.RoleId.Equals(role.RoleId)).Count() <= 0)
+                    {
+                        db.Role.Add(role);
+                        await db.SaveChangesAsync();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                LogWriter.Write(ex.ToString());
+            }
+        }
+        public static async Task AddAccountIfNotExists(Account account)
+        {
+            try
+            {
+                using (var db = new ApplicationDbContext())
+                {
+                    if (db.Account.Where(x => x.Id.Equals(account.Id)).Count() <= 0)
+                    {
+                        db.Account.Add(account);
+                        await db.SaveChangesAsync();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                LogWriter.Write(ex.ToString());
+            }
         }
     }
 }

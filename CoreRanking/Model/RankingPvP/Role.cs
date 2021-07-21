@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace CoreRanking.Model.RankingPvP
@@ -17,6 +18,7 @@ namespace CoreRanking.Model.RankingPvP
         public int Death { get; set; }
         public string Elo { get; set; }
         public int Level { get; set; }
+        public DateTime LevelDate{ get; set; }
         public int Points { get; set; }
         public int Doublekill { get;set; }
         public int Triplekill { get;set; }
